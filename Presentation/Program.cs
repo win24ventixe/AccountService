@@ -97,7 +97,7 @@ app.MapOpenApi();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Event Service API");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Account Service API");
     c.RoutePrefix = string.Empty; // Set the Swagger UI at the app's root
 });
 

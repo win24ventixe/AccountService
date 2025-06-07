@@ -23,6 +23,7 @@ public interface IAccountService
     Task<UserResult> DeleteUserAsync(string id);
     Task<UserResult> GetUsersAsync();
     Task<UserResult> UpdateUserAsync(UpdateUserRequest request);
+    Task<UserResult> GetByIdAsync(string id);
 }
 
 public class AccountService(IUserRepository userRepository, UserManager<UserEntity> userManager, RoleManager<IdentityRole> roleManager, ServiceBusSender sender, IConfiguration configuration) : IAccountService
@@ -184,6 +185,25 @@ public class AccountService(IUserRepository userRepository, UserManager<UserEnti
             Success = true,
         };
     }
+    public async Task<UserResult> GetByIdAsync(string id)
+    {
+        var userEntityResult = await _userRepository.GetAsync(user => user.Id == id);
+        if (!userEntityResult.Success || userEntityResult.Result == null)
+            return new UserResult { Success = false, Error = "User not found." };
+
+        var userEntity = userEntityResult.Result;
+
+        var roles = await _userManager.GetRolesAsync(userEntity);
+        var user = new User
+        {
+            Id = userEntity.Id,
+            Email = userEntity.Email!,
+            Role = roles.FirstOrDefault() ?? "User",
+            Token = await _userManager.GenerateEmailConfirmationTokenAsync(userEntity)
+        };
+        return new UserResult { Success = true };
+    }
+
     public async Task<bool> AlreadyExistsAsync(string email)
     {
         var result = await _userRepository.AlreadyExistAsync(x => x.Email == email);
